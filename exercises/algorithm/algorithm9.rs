@@ -2,7 +2,7 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -37,7 +37,18 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        let mut idx = self.count;
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx); // 提前计算父节点索引
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                self.items.swap(idx, parent_idx);  // 使用预存的父节点索引进行swap
+                idx = parent_idx;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +69,19 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        let left_idx = self.left_child_idx(idx);
+        let right_idx = self.right_child_idx(idx);
+        if right_idx <= self.count {
+            if (self.comparator)(&self.items[right_idx], &self.items[left_idx]) {
+                right_idx
+            } else {
+                left_idx
+            }
+        } else if left_idx <= self.count {
+            left_idx
+        } else {
+            idx  // 当没有子节点时，返回自身的索引（不过通常不会用到）
+        }
     }
 }
 
@@ -85,7 +108,35 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        if self.count == 0 {
+            return None;
+        }
+
+        // 弹出堆顶元素，这是最小或最大元素
+        let result = self.items.swap_remove(1);
+        self.count -= 1;
+
+        if self.count > 0 {
+            // 从数组末尾取出最后一个元素，并将其重新插入到堆的顶部
+            let last_item = self.items.pop().unwrap();
+            if !self.items.is_empty() {
+                self.items.insert(1, last_item);
+            }
+
+            // 重新调整堆
+            let mut idx = 1;
+            while self.children_present(idx) {
+                let swap_idx = self.smallest_child_idx(idx);
+                if (self.comparator)(&self.items[swap_idx], &self.items[idx]) {
+                    self.items.swap(idx, swap_idx);
+                    idx = swap_idx;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Some(result)
     }
 }
 
